@@ -918,5 +918,60 @@
   }
 </script>
 
+<!-- Supabase Integration -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+<script>
+  // Supabase configuration
+  const SUPABASE_URL = 'https://slmdfgunkmvbqbzjfpdz.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsbWRmZ3Vua212YnFiempmcGR6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExMDYwNDUsImV4cCI6MjA4NjY4MjA0NX0.kBz7uKWPh2fDL8d9qQhSjl8X7Xk0Q5w6s7z8a9b0c1d';
+  
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  // Lead capture function - wired to Supabase + iMessage webhook
+  window.captureLeadData = async function(data) {
+    try {
+      // 1. Save to Supabase
+      const { error } = await supabase
+        .from('calculator_leads')
+        .insert([{
+          name: data.name,
+          email: data.email,
+          aum: data.aum,
+          current_fee: parseFloat(data.currentFee),
+          advisor_type: data.advisorType,
+          projected_savings: data.projectedSavings,
+          time_horizon: data.years,
+          status: 'new'
+        }]);
+      
+      if (error) {
+        console.error('Supabase error:', error);
+        return;
+      }
+      
+      console.log('✅ Lead saved to Supabase');
+      
+      // 2. Trigger iMessage alert via webhook (if AUM >= $1M)
+      if (data.aum >= 1000000) {
+        const priority = data.aum >= 2000000 ? 'HOT' : 'WARM';
+        const alertMessage = `🎯 ${priority} CALCULATOR LEAD\n\nName: ${data.name}\nEmail: ${data.email}\nAUM: $${(data.aum/1000000).toFixed(1)}M\nCurrent Fee: ${data.currentFee}\nProjected Savings: $${(data.projectedSavings/1000).toFixed(0)}K\n\nReply to schedule with Rance: (203) 671-3322`;
+        
+        // Call webhook for iMessage (Jarvis will set this up)
+        fetch('https://hooks.openclaw.ai/imessage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: '203-689-5468',
+            message: alertMessage
+          })
+        }).catch(err => console.log('iMessage webhook not yet configured'));
+      }
+      
+    } catch (err) {
+      console.error('Lead capture error:', err);
+    }
+  };
+</script>
+
 </body>
 </html>
