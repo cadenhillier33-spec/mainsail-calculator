@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mainsail Capital — Wealth Management Cost Calculator</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+  :root {
+    --navy: #0B0F1A;
+    --navy-card: #111827;
+    --navy-input: #1a2236;
+    --border: rgba(200, 169, 81, 0.12);
+    --border-hover: rgba(200, 169, 81, 0.35);
+    --gold: #C8A951;
+    --gold-light: #e0c674;
+    --gold-glow: rgba(200, 169, 81, 0.08);
+    --white: #f4f4f5;
+    --gray-100: #e4e4e7;
+    --gray-300: #a1a1aa;
+    --gray-500: #71717a;
+    --gray-700: #3f3f46;
+    --green: #22c55e;
+    --green-dim: rgba(34, 197, 94, 0.1);
+    --red: #ef4444;
+    --red-dim: rgba(239, 68, 68, 0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Subtle background texture */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(200, 169, 81, 0.04) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page-wrapper {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 56px 24px 40px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .logo-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 20px;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    margin-bottom: 36px;
+    background: rgba(200, 169, 81, 0.04);
+  }
+
+  .logo-row img {
+    height: 28px;
+    width: auto;
+  }
+
+  .logo-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gold);
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+  }
+
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(30px, 5.5vw, 48px);
+    font-weight: 700;
+    color: var(--white);
+    line-height: 1.15;
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  .header h1 span {
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header p {
+    font-size: 16px;
+    color: var(--gray-300);
+    line-height: 1.7;
+    max-width: 520px;
+    margin: 0 auto;
+    font-weight: 400;
+  }
+
+  /* Main Container */
+  .calc-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  /* Card */
+  .card {
+    background: var(--navy-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 36px 32px;
+    margin-bottom: 20px;
+    transition: border-color 0.3s;
+  }
+
+  .card:hover {
+    border-color: var(--border-hover);
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 28px;
+  }
+
+  /* Form Groups */
+  .form-group {
+    margin-bottom: 28px;
+  }
+
+  .form-group:last-of-type {
+    margin-bottom: 0;
+  }
+
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gray-300);
+    margin-bottom: 10px;
+    letter-spacing: 0.2px;
+  }
+
+  /* Input with $ prefix - FIXED overlap */
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-wrapper .prefix {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--gold);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  select {
+    width: 100%;
+    padding: 15px 18px;
+    background: var(--navy-input);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    color: var(--white);
+    font-size: 16px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    transition: all 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(200, 169, 81, 0.1);
+    background: rgba(26, 34, 54, 0.9);
+  }
+
+  .has-prefix {
+    padding-left: 42px !important;
+  }
+
+  select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='%23C8A951'%3E%3Cpath d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 18px center;
+    padding-right: 44px;
+  }
+
+  /* Slider */
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .slider-track {
+    flex: 1;
+    position: relative;
+    height: 40px;
+    display: flex;
+    align-items: center;
+  }
+
+  .slider-track input[type="range"] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 4px;
+    background: linear-gradient(to right, var(--gold), var(--gold));
+    border-radius: 2px;
+    outline: none;
+    position: relative;
+  }
+
+  .slider-track input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+    background: var(--gray-700);
+    border-radius: 2px;
+  }
+
+  .slider-track input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--gold);
+    border-radius: 50%;
+    cursor: pointer;
+    margin-top: -8px;
+    box-shadow: 0 0 12px rgba(200, 169, 81, 0.4);
+    transition: transform 0.15s;
+  }
+
+  .slider-track input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+
+  .slider-value {
+    min-width: 64px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--white);
+    background: var(--navy-input);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 8px 12px;
+  }
+
+  /* Button */
+  .calc-btn {
+    width: 100%;
+    padding: 17px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    border: none;
+    border-radius: 14px;
+    color: var(--navy);
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: all 0.2s;
+    margin-top: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .calc-btn::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent, rgba(255,255,255,0.15));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .calc-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(200, 169, 81, 0.3);
+  }
+
+  .calc-btn:hover::after { opacity: 1; }
+  .calc-btn:active { transform: translateY(0); }
+
+  /* Email Gate */
+  .email-gate {
+    display: none;
+    padding: 28px 0 0;
+  }
+
+  .email-gate .gate-text {
+    font-size: 14px;
+    color: var(--gray-300);
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .email-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .email-submit {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    border: none;
+    border-radius: 12px;
+    color: var(--navy);
+    font-size: 15px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .email-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(200, 169, 81, 0.3);
+  }
+
+  /* Results */
+  .results {
+    display: none;
+    animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Savings Hero */
+  .savings-hero {
+    text-align: center;
+    padding: 48px 32px;
+    background: var(--navy-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .savings-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at center, rgba(34, 197, 94, 0.06) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .savings-hero .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 12px;
+    position: relative;
+  }
+
+  .savings-hero .amount {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(40px, 8vw, 56px);
+    font-weight: 700;
+    color: var(--green);
+    line-height: 1.1;
+    margin-bottom: 10px;
+    position: relative;
+  }
+
+  .savings-hero .sub {
+    font-size: 14px;
+    color: var(--gray-300);
+    position: relative;
+  }
+
+  /* Comparison Cards */
+  .comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .comp-card {
+    padding: 28px 20px;
+    border-radius: 16px;
+    text-align: center;
+  }
+
+  .comp-card.them {
+    background: var(--red-dim);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+  }
+
+  .comp-card.us {
+    background: var(--green-dim);
+    border: 1px solid rgba(34, 197, 94, 0.15);
+  }
+
+  .comp-card .comp-icon {
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+
+  .comp-card .comp-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+  }
+
+  .comp-card.them .comp-label { color: var(--red); }
+  .comp-card.us .comp-label { color: var(--green); }
+
+  .comp-card .comp-fee {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--white);
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+  }
+
+  .comp-card .comp-annual {
+    font-size: 12px;
+    color: var(--gray-500);
+    font-weight: 500;
+  }
+
+  /* Year Breakdown */
+  .breakdown-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .breakdown {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  .breakdown th {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--gray-500);
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .breakdown th:last-child { text-align: right; }
+
+  .breakdown td {
+    padding: 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gray-300);
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+  }
+
+  .breakdown td:first-child {
+    font-weight: 600;
+    color: var(--white);
+    font-size: 13px;
+  }
+
+  .breakdown td:last-child {
+    text-align: right;
+    font-weight: 700;
+    color: var(--green);
+  }
+
+  .breakdown tr:last-child td {
+    border-bottom: none;
+    padding-top: 20px;
+    font-size: 15px;
+  }
+
+  .breakdown tr:last-child td:first-child {
+    color: var(--gold);
+  }
+
+  .breakdown tr:last-child td:last-child {
+    color: var(--green);
+    font-size: 16px;
+  }
+
+  /* Hidden Costs */
+  .hidden-costs-content {
+    font-size: 14px;
+    color: var(--gray-300);
+    line-height: 1.8;
+  }
+
+  .hidden-costs-content .icon-warn {
+    display: inline-block;
+    margin-right: 8px;
+    font-size: 16px;
+  }
+
+  /* CTA */
+  .cta-section {
+    text-align: center;
+    padding: 40px 32px;
+    background: var(--navy-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .cta-section h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    color: var(--white);
+    margin-bottom: 10px;
+    position: relative;
+  }
+
+  .cta-section p {
+    font-size: 14px;
+    color: var(--gray-300);
+    margin-bottom: 24px;
+    position: relative;
+  }
+
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 40px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    border: none;
+    border-radius: 12px;
+    color: var(--navy);
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s;
+    position: relative;
+  }
+
+  .cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(200, 169, 81, 0.3);
+  }
+
+  .cta-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Disclaimer */
+  .disclaimer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--gray-500);
+    line-height: 1.6;
+    padding: 40px 24px 56px;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  /* Divider accent */
+  .accent-line {
+    width: 40px;
+    height: 2px;
+    background: var(--gold);
+    border-radius: 1px;
+    margin: 0 auto 20px;
+  }
+
+  /* Responsive */
+  @media (max-width: 520px) {
+    .header { padding: 40px 16px 28px; }
+    .calc-container { padding: 0 16px 48px; }
+    .card { padding: 28px 20px; border-radius: 16px; }
+    .comparison { grid-template-columns: 1fr; gap: 12px; }
+    .email-fields { grid-template-columns: 1fr; }
+    .savings-hero { padding: 36px 20px; }
+    .breakdown td, .breakdown th { padding: 12px 10px; font-size: 13px; }
+    .cta-section { padding: 32px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-wrapper">
+
+<div class="header">
+  <div class="logo-row">
+    <img src="https://iili.io/qHhHnCx.png" alt="Mainsail Capital" onerror="this.style.display='none'">
+    <span class="logo-text">Mainsail Capital</span>
+  </div>
+  <h1>How Much Is Your Wealth Management <span>Really Costing You?</span></h1>
+  <p>Most advisors charge more than you think — in fees, hidden costs, and missed growth. See what transparent, fiduciary management looks like.</p>
+</div>
+
+<div class="calc-container">
+
+  <!-- Input Card -->
+  <div class="card" id="inputCard">
+    <div class="card-title">Your Current Situation</div>
+
+    <div class="form-group">
+      <label>Total Investable Assets</label>
+      <div class="input-wrapper">
+        <span class="prefix">$</span>
+        <input type="text" id="aum" class="has-prefix" placeholder="2,000,000" inputmode="numeric">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Current Advisor's Annual Fee</label>
+      <div class="slider-row">
+        <div class="slider-track">
+          <input type="range" id="currentFee" min="0.5" max="3.0" step="0.1" value="1.5">
+        </div>
+        <span class="slider-value" id="currentFeeDisplay">1.5%</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Current Advisor Type</label>
+      <select id="advisorType">
+        <option value="wirehouse">Wirehouse (Merrill, Morgan Stanley, UBS...)</option>
+        <option value="independent-bd">Independent Broker-Dealer</option>
+        <option value="ria">Independent RIA</option>
+        <option value="bank">Bank / Trust Company</option>
+        <option value="robo">Robo-Advisor</option>
+        <option value="none">No Current Advisor</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Expected Annual Return (before fees)</label>
+      <div class="slider-row">
+        <div class="slider-track">
+          <input type="range" id="returnRate" min="4" max="12" step="0.5" value="7">
+        </div>
+        <span class="slider-value" id="returnDisplay">7.0%</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Investment Time Horizon</label>
+      <div class="slider-row">
+        <div class="slider-track">
+          <input type="range" id="years" min="5" max="30" step="1" value="10">
+        </div>
+        <span class="slider-value" id="yearsDisplay">10 yrs</span>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="showEmailGate()">Calculate My Savings →</button>
+
+    <!-- Email Gate -->
+    <div class="email-gate" id="emailGate">
+      <p class="gate-text">Enter your details to see your personalized savings analysis.</p>
+      <div class="email-fields">
+        <input type="text" id="userName" placeholder="First name">
+        <input type="email" id="userEmail" placeholder="Email address">
+      </div>
+      <button class="email-submit" onclick="calculate()">View My Results</button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="results">
+
+    <div class="savings-hero">
+      <div class="label">Your Potential Savings with Mainsail</div>
+      <div class="amount" id="totalSavings">$0</div>
+      <div class="sub" id="savingsSub">over 10 years</div>
+    </div>
+
+    <div class="comparison">
+      <div class="comp-card them">
+        <div class="comp-icon">📉</div>
+        <div class="comp-label">Current Advisor</div>
+        <div class="comp-fee" id="theirFeeAmt">$0</div>
+        <div class="comp-annual" id="theirFeeRate">per year</div>
+      </div>
+      <div class="comp-card us">
+        <div class="comp-icon">📈</div>
+        <div class="comp-label">Mainsail Capital</div>
+        <div class="comp-fee" id="ourFeeAmt">$0</div>
+        <div class="comp-annual">1.0% per year</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Year-by-Year Breakdown</div>
+      <div class="breakdown-wrap">
+        <table class="breakdown">
+          <thead>
+            <tr>
+              <th>Year</th>
+              <th>Current Advisor</th>
+              <th>Mainsail</th>
+              <th style="text-align:right">You Keep More</th>
+            </tr>
+          </thead>
+          <tbody id="breakdownBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" id="hiddenCostsCard" style="display:none">
+      <div class="card-title">Hidden Costs to Watch For</div>
+      <div class="hidden-costs-content" id="hiddenCosts"></div>
+    </div>
+
+    <div class="cta-section">
+      <div class="accent-line"></div>
+      <h3>Ready to keep more of what you earn?</h3>
+      <p>Schedule a no-obligation conversation with Rance Hillier.</p>
+      <a href="tel:2036713322" class="cta-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        (203) 671-3322
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<div class="disclaimer">
+  For informational purposes only. Not investment advice. Past performance does not guarantee future results. This calculator provides estimates based on the assumptions you enter and does not account for taxes, inflation, or specific investment performance. Actual results will vary. Mainsail Capital is backed by Commonwealth Financial Network®, Member FINRA/SIPC. © 2026 Mainsail Capital Management.
+</div>
+
+</div>
+
+<script>
+  // Format number as currency
+  function fmt(n) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+  }
+
+  // AUM input formatting
+  const aumInput = document.getElementById('aum');
+  aumInput.addEventListener('input', function() {
+    let raw = this.value.replace(/[^0-9]/g, '');
+    if (raw) {
+      this.value = parseInt(raw).toLocaleString('en-US');
+    }
+  });
+
+  // Slider live updates
+  document.getElementById('currentFee').addEventListener('input', function() {
+    document.getElementById('currentFeeDisplay').textContent = parseFloat(this.value).toFixed(1) + '%';
+  });
+
+  document.getElementById('returnRate').addEventListener('input', function() {
+    document.getElementById('returnDisplay').textContent = parseFloat(this.value).toFixed(1) + '%';
+  });
+
+  document.getElementById('years').addEventListener('input', function() {
+    document.getElementById('yearsDisplay').textContent = this.value + ' yrs';
+  });
+
+  function showEmailGate() {
+    const aum = parseInt(aumInput.value.replace(/[^0-9]/g, ''));
+    if (!aum || aum < 100000) {
+      aumInput.style.borderColor = 'var(--red)';
+      aumInput.setAttribute('placeholder', 'Enter at least $100,000');
+      setTimeout(() => { aumInput.style.borderColor = ''; }, 2000);
+      return;
+    }
+    document.getElementById('emailGate').style.display = 'block';
+    document.getElementById('userName').focus();
+    // Smooth scroll to email gate
+    document.getElementById('emailGate').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function calculate() {
+    const name = document.getElementById('userName').value.trim();
+    const email = document.getElementById('userEmail').value.trim();
+
+    if (!name || !email || !email.includes('@')) {
+      if (!name) document.getElementById('userName').style.borderColor = 'var(--red)';
+      if (!email || !email.includes('@')) document.getElementById('userEmail').style.borderColor = 'var(--red)';
+      setTimeout(() => {
+        document.getElementById('userName').style.borderColor = '';
+        document.getElementById('userEmail').style.borderColor = '';
+      }, 2000);
+      return;
+    }
+
+    const aum = parseInt(aumInput.value.replace(/[^0-9]/g, ''));
+    const currentFee = parseFloat(document.getElementById('currentFee').value) / 100;
+    const mainsailFee = 0.01;
+    const returnRate = parseFloat(document.getElementById('returnRate').value) / 100;
+    const years = parseInt(document.getElementById('years').value);
+    const advisorType = document.getElementById('advisorType').value;
+
+    // Compounding calculation
+    let balCurrent = aum;
+    let balMainsail = aum;
+    let rows = '';
+    let milestones = [1, 3, 5, 10, 15, 20, 25, 30];
+
+    for (let y = 1; y <= years; y++) {
+      balCurrent = balCurrent * (1 + returnRate - currentFee);
+      balMainsail = balMainsail * (1 + returnRate - mainsailFee);
+      let diff = balMainsail - balCurrent;
+
+      if (milestones.includes(y) || y === years) {
+        let diffColor = diff >= 0 ? 'var(--green)' : 'var(--red)';
+        let diffSign = diff >= 0 ? '+' : '';
+        rows += '<tr><td>Year ' + y + '</td><td>' + fmt(balCurrent) + '</td><td>' + fmt(balMainsail) + '</td><td style="color:' + diffColor + '">' + diffSign + fmt(diff) + '</td></tr>';
+      }
+    }
+
+    let totalSavings = balMainsail - balCurrent;
+    let annualFeeCurrent = aum * currentFee;
+    let annualFeeMainsail = aum * mainsailFee;
+
+    // Savings hero
+    let savingsSign = totalSavings >= 0 ? '+' : '';
+    let savingsColor = totalSavings >= 0 ? 'var(--green)' : 'var(--red)';
+    document.getElementById('totalSavings').textContent = savingsSign + fmt(totalSavings);
+    document.getElementById('totalSavings').style.color = savingsColor;
+    document.getElementById('savingsSub').textContent = 'more in your pocket over ' + years + ' years';
+
+    if (totalSavings < 0) {
+      document.getElementById('savingsSub').textContent = 'Your current fee is already below Mainsail\'s 1% — nice!';
+    }
+
+    // Comparison cards
+    document.getElementById('theirFeeAmt').textContent = fmt(annualFeeCurrent);
+    document.getElementById('theirFeeRate').textContent = (currentFee * 100).toFixed(1) + '% per year';
+    document.getElementById('ourFeeAmt').textContent = fmt(annualFeeMainsail);
+
+    // Breakdown table
+    document.getElementById('breakdownBody').innerHTML = rows;
+
+    // Hidden costs
+    const hiddenCosts = {
+      'wirehouse': '<span class="icon-warn">⚠️</span> Wirehouses often layer additional costs including 12b-1 fund fees (0.25–1.0%), trading commissions, account maintenance fees, and proprietary product markups. Many also receive revenue sharing from fund companies — costs passed to you indirectly.',
+      'independent-bd': '<span class="icon-warn">⚠️</span> Independent broker-dealers may charge transaction fees, platform fees, and receive trailing commissions from fund companies. Always ask for a complete fee disclosure.',
+      'bank': '<span class="icon-warn">⚠️</span> Bank trust departments often charge a tiered trust fee ON TOP of investment management fees, plus custodial and administrative charges. Total all-in costs frequently exceed 2%.',
+      'robo': '<span class="icon-warn">⚠️</span> While robo-advisors advertise low fees, they lack personalized tax planning, estate coordination, and human judgment during market volatility — things that can cost far more than a fee difference.',
+      'ria': '<span class="icon-warn">⚠️</span> Some RIAs layer performance fees, planning fees, or use higher-cost fund share classes. Mainsail uses institutional share classes and charges one transparent fee.',
+      'none': '<span class="icon-warn">⚠️</span> Without professional management, common mistakes include emotional trading, poor tax management, and inadequate diversification — often costing 1–3% annually in missed opportunities.'
+    };
+
+    if (hiddenCosts[advisorType]) {
+      document.getElementById('hiddenCosts').innerHTML = hiddenCosts[advisorType];
+      document.getElementById('hiddenCostsCard').style.display = 'block';
+    }
+
+    // Show results
+    document.getElementById('results').style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+
+    // Lead capture for Jarvis to wire to Supabase
+    const leadData = {
+      name, email, aum, currentFee: (currentFee * 100).toFixed(1) + '%',
+      advisorType, projectedSavings: Math.round(totalSavings), years,
+      timestamp: new Date().toISOString()
+    };
+
+    if (window.captureLeadData) {
+      window.captureLeadData(leadData);
+    }
+
+    console.log('MAINSAIL_LEAD_CAPTURE', JSON.stringify(leadData));
+  }
+</script>
+
+</body>
+</html>
